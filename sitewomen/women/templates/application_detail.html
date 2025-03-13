@@ -1,0 +1,61 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Детали заявки</title>
+    <link type="text/css" href="{% static 'css/style.css' %}" rel="stylesheet"/>
+</head>
+<body>
+
+<div id="header" class="header">
+    <img src="{% static 'images/logo.png' %}" alt="logo">
+    <div class="create-line"></div>
+    <div class="menu" id="menu">
+        <a href="{% url 'home' %}" class="menu-button">Главная</a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'form' %}" class="menu-button">Конкурс</a>
+            <a href="{% url 'my_applications' %}" class="menu-button">Мои заявки</a>
+        {% endif %}
+    </div>
+
+    {% if user.is_authenticated %}
+        <span class="menu-button-login">Привет, {{ user.username }}!</span>
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="menu-button-login">Выйти</button>
+        </form>
+    {% else %}
+        <a href="{% url 'register' %}" class="menu-button-login">Войти</a>
+    {% endif %}
+
+    <div class="support">
+        <div class="create-line"></div>
+        <h1 class="support-text" id="support-text">Поддержка:</h1>
+        <h1 class="support-number" id="support-number">+7(906)943-57-23</h1>
+        <div class="create-line"></div>
+        <h1 class="organization-name" id="organization-name">© 2023 ФГБОУ ВО "АлтГПУ"</h1>
+    </div>
+</div>
+
+<div class="white-rectangle">
+  <div class="content">
+    <h2 class="heading">Детали заявки</h2>
+    <h3>{{ application.startup_name }}</h3>
+    <p><strong>Имя:</strong> {{ application.first_name }}</p>
+    <p><strong>Фамилия:</strong> {{ application.last_name }}</p>
+    <p><strong>Отчество:</strong> {{ application.middle_name }}</p>
+    <p><strong>Номер телефона:</strong> {{ application.phone }}</p>
+    <p><strong>Email:</strong> {{ application.email }}</p>
+    <p><strong>Организация:</strong> {{ application.organization }}</p>
+    <p><strong>Возраст:</strong> {{ application.age }}</p>
+    <p><strong>Класс:</strong> {{ application.class_number }}</p>
+    <p><strong>Номинация:</strong> {{ application.nomination }}</p>
+    <p><strong>Название стартапа:</strong> {{ application.startup_name }}</p>
+    <p><strong>Описание стартапа:</strong> {{ application.startup_description }}</p>
+    <a href="{% url 'my_applications' %}" class="button">Вернуться к заявкам</a>
+  </div>
+</div>
+</body>
+</html>
