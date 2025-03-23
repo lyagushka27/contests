@@ -40,22 +40,44 @@
 </div>
 
 <div class="white-rectangle">
-  <div class="content">
-    <h2 class="heading">Детали заявки</h2>
-    <h3>{{ application.startup_name }}</h3>
-    <p><strong>Имя:</strong> {{ application.first_name }}</p>
-    <p><strong>Фамилия:</strong> {{ application.last_name }}</p>
-    <p><strong>Отчество:</strong> {{ application.middle_name }}</p>
-    <p><strong>Номер телефона:</strong> {{ application.phone }}</p>
-    <p><strong>Email:</strong> {{ application.email }}</p>
-    <p><strong>Организация:</strong> {{ application.organization }}</p>
-    <p><strong>Возраст:</strong> {{ application.age }}</p>
-    <p><strong>Класс:</strong> {{ application.class_number }}</p>
-    <p><strong>Номинация:</strong> {{ application.nomination }}</p>
-    <p><strong>Название стартапа:</strong> {{ application.startup_name }}</p>
-    <p><strong>Описание стартапа:</strong> {{ application.startup_description }}</p>
-    <a href="{% url 'my_applications' %}" class="button">Вернуться к заявкам</a>
+    <div class="content">
+      <h2 class="heading">Детали заявки</h2>
+      <h3>{{ application.startup_name }}</h3>
+      <p><strong>Имя:</strong> {{ application.first_name }}</p>
+      <p><strong>Фамилия:</strong> {{ application.last_name }}</p>
+      <p><strong>Отчество:</strong> {{ application.middle_name }}</p>
+      <p><strong>Номер телефона:</strong> {{ application.phone }}</p>
+      <p><strong>Email:</strong> {{ application.email }}</p>
+      <p><strong>Организация:</strong> {{ application.organization }}</p>
+      <p><strong>Возраст:</strong> {{ application.age }}</p>
+      <p><strong>Класс:</strong> {{ application.class_number }}</p>
+      <p><strong>Номинация:</strong> {{ application.nomination }}</p>
+      <p><strong>Название стартапа:</strong> {{ application.startup_name }}</p>
+      <p><strong>Описание стартапа:</strong> {{ application.startup_description }}</p>
+  
+      <!-- Оценки и комментарии -->
+      <h4>Оценки и комментарии:</h4>
+      {% if application.reviews.all %}
+        <ul>
+          {% for review in application.reviews.all %}
+            <li style = "margin: 20px">
+              <strong>Инновационность:</strong> {{ review.innovation }}<br>
+              <strong>Реализуемость:</strong> {{ review.feasibility }}<br>
+              <strong>Влияние:</strong> {{ review.impact }}<br>
+              <strong>Качество презентации:</strong> {{ review.presentation_quality }}<br>
+              <strong>Общий балл:</strong> {{ review.total_score }}<br>
+              <strong>Комментарий:</strong> {{ review.comment }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>Оценки отсутствуют.</p>
+      {% endif %}
+  
+      <a href="{% url 'my_applications' %}" class="button">Вернуться к заявкам</a>
+    </div>
   </div>
+  
 </div>
 </body>
 </html>

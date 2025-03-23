@@ -1,20 +1,9 @@
-from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
-from .models import Application
+from django import forms
+from .models import Application, UserProfile
 
-class RegisterForm(UserCreationForm):
-    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'input-v'}))
-
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'password1', 'password2']
-        widgets = {
-            'username': forms.TextInput(attrs={'class': 'input-v'}),
-            'password1': forms.PasswordInput(attrs={'class': 'input-v'}),
-            'password2': forms.PasswordInput(attrs={'class': 'input-v'}),
-        }
 
 class LoginForm(AuthenticationForm):
     class Meta:
@@ -25,11 +14,6 @@ class LoginForm(AuthenticationForm):
             'password': forms.PasswordInput(attrs={'class': 'input-v'}),
         }
 
-from django import forms
-from .models import Application
-
-from django import forms
-from .models import Application
 
 class ApplicationForm(forms.ModelForm):
     NOMINATION_CHOICES = [
@@ -77,3 +61,33 @@ class ApplicationForm(forms.ModelForm):
             'presentation': forms.FileInput(attrs={'class': 'file-upload'}),
             'cover': forms.FileInput(attrs={'class': 'file-upload'}),
         }
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            if 'initial' not in kwargs:
+                kwargs['initial'] = {}
+            kwargs['initial'].update({
+                'first_name': self.instance.user.userprofile.first_name, # type: ignore
+                'last_name': self.instance.user.userprofile.last_name, # type: ignore
+                'middle_name': self.instance.user.userprofile.middle_name, # type: ignore
+            })
+
+class RegisterForm(UserCreationForm):
+    first_name = forms.CharField(max_length=100, required=True)
+    last_name = forms.CharField(max_length=100, required=True)
+    middle_name = forms.CharField(max_length=100, required=True)
+    email = forms.EmailField(required=True)
+
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'middle_name' , 'email', 'password1', 'password2')
+
+    def save(self, commit=True):
+        user = super().save(commit=commit)
+        UserProfile.objects.create(
+            user=user,
+            first_name=self.cleaned_data['first_name'],
+            last_name=self.cleaned_data['last_name'],
+            middle_name=self.cleaned_data['middle_name']
+        )
+        return user

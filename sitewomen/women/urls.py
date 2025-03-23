@@ -11,4 +11,6 @@ urlpatterns = [
     path('success/', views.success_view, name='success'),
     path('my_applications/', views.my_applications, name='my_applications'),
     path('application_detail/<int:application_id>/', views.application_detail, name='application_detail'),
+    path('download_certificate/', views.download_certificate, name='download_certificate'),
+    path('download_diploma/', views.download_diploma, name='download_diploma'),
 ]
