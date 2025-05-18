@@ -1,3 +1,4 @@
+{% extends 'women/base.html' %}
 {% load static %}
 
 <!doctype html>
@@ -12,51 +13,85 @@
 </head>
 <body>
 
-<div id="header" class="header">
-    <img src="{% static 'images/logo.png' %}" alt="logo">
-    <div class="create-line"></div>
-    <div class="menu" id="menu">
-        <a href="{% url 'home' %}" class="menu-button">Главная</a>
+    <div id="header" class="header">
+        <img src="{% static 'images/logo.png' %}" alt="logo">
+        <div class="create-line"></div>
+        <div class="menu" id="menu">
+            <a href="{% url 'home' %}" class="menu-button">Главная</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'my_applications' %}" class="menu-button">Конкурсы</a>
+            {% endif %}
+        </div>
+    
         {% if user.is_authenticated %}
-            <a href="{% url 'form' %}" class="menu-button">Конкурс</a>
-            <a href="{% url 'my_applications' %}" class="menu-button">Мои заявки</a>
+            <span class="menu-button-login">Привет, {{ user.username }}!</span>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="menu-button-login">Выйти</button>
+            </form>
+        {% else %}
+            <a href="{% url 'register' %}" class="menu-button-login">Войти</a>
         {% endif %}
+    
+        <div class="support">
+            <div class="create-line"></div>
+            <h1 class="support-text" id="support-text">Поддержка:</h1>
+            <h1 class="support-number" id="support-number">+7(906)943-57-23</h1>
+            <div class="create-line"></div>
+            <h1 class="organization-name" id="organization-name">© 2023 ФГБОУ ВО "АлтГПУ"</h1>
+        </div>
     </div>
 
-    {% if user.is_authenticated %}
-        <span class="menu-button-login">Привет, {{ user.username }}!</span>
-        <form method="post" action="{% url 'logout' %}">
-            {% csrf_token %}
-            <button type="submit" class="menu-button-login">Выйти</button>
-        </form>
-    {% else %}
-        <a href="{% url 'register' %}" class="menu-button-login">Войти</a>
-    {% endif %}
-
-    <div class="support">
-        <div class="create-line"></div>
-        <h1 class="support-text" id="support-text">Поддержка:</h1>
-        <h1 class="support-number" id="support-number">+7(906)943-57-23</h1>
-        <div class="create-line"></div>
-        <h1 class="organization-name" id="organization-name">© 2023 ФГБОУ ВО "АлтГПУ"</h1>
-    </div>
-</div>
-
-
+{% block content %}
 <div class="white-rectangle">
     <div class="content">
-        <h1 class="heading">Главная</h1>
-        <p class="text">Конкурс проводится Chupepoy  в рамках мероприятия, направленного на развитие интеллектуальных и творческих способностей, интереса к интеллектуальной научной-технической деятельности школьников</p>
-        <div class="gray-rectangle">
-            <li class="text">1-15 октября 2023 г. – прием заявок и работ на Конкурс</li>
-            <li class="text">16-23 октября 2023 г. – проверка соответствия работ условиям конкурса</li>
-            <li class="text"> 24-29 октября 2023 г. – Интернет-голосование</li>
-            <li class="text">30 октября – 12 ноября 2023 г. – защита проектов, награждение победителей и участников</li>
+        <h2 class="heading">Главная</h2>
+        <div class="contest">
+            <p class="text">Конкурс проводится в рамках мероприятия, направленного на развитие интеллектуальных и творческих способностей, интереса к интеллектуальной научной-технической деятельности школьников</p>
+            <div class="gray-rectangle">
+                <ul class="list-unstyled">
+                    <li class="field"><strong>1-15 октября 2023 г.</strong> – прием заявок и работ на Конкурс</li>
+                    <li class="field"><strong>16-23 октября 2023 г.</strong> – проверка соответствия работ условиям конкурса</li>
+                    <li class="field"><strong>24-29 октября 2023 г.</strong> – Интернет-голосование</li>
+                    <li class="field"><strong>30 октября – 12 ноября 2023 г.</strong> – защита проектов, награждение победителей и участников</li>
+                </ul>
+            </div>
+            <a href="{% url 'register' %}" class="button">Зарегистрироваться</a>
         </div>
-        <a href="{% url 'register' %}" class="button">Зарегистрироваться</a>
     </div>
-
-
 </div>
+
+<style>
+.text {
+    color: #333;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.gray-rectangle {
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.gray-rectangle .field {
+    margin-bottom: 10px;
+    padding-left: 20px;
+    position: relative;
+}
+
+.gray-rectangle .field:before {
+    content: "•";
+    color: #6f42c1;
+    position: absolute;
+    left: 0;
+}
+
+.gray-rectangle .field strong {
+    color: #6f42c1;
+}
+</style>
+{% endblock %}
 </body>
 </html>

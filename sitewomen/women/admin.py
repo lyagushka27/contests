@@ -1,10 +1,35 @@
-import csv
-from django.http import HttpResponse
 from django.contrib import admin
 from django.contrib.auth.models import User
-from django.db.models import Avg
-from .models import Application, Review
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+import csv
+from django.http import HttpResponse
+from django.db.models import Avg, Count
+from django.utils.html import format_html
+from .models import Application, Contest, Review, ApplicationField, ApplicationAnswer, ApplicationProxy
+from django.urls import path
+from django.shortcuts import redirect
+from .generations_word import generate_contest_report
 
+
+def export_to_csv(modeladmin, request, queryset, fields, filename):
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename={filename}'
+    response.write('\ufeff'.encode('utf-8'))
+    
+    writer = csv.writer(response)
+    writer.writerow(fields)
+    
+    for obj in queryset:
+        row = []
+        for field in fields:
+            if hasattr(obj, field):
+                value = getattr(obj, field)
+                if callable(value):
+                    value = value()
+                row.append(str(value))
+        writer.writerow(row)
+    
+    return response
 
 def export_users_to_csv(modeladmin, request, queryset):
     """Экспортирует выбранных пользователей в CSV-файл."""
@@ -68,75 +93,207 @@ def export_rating_to_csv(modeladmin, request, queryset):
 
 export_rating_to_csv.short_description = 'Экспортировать рейтинг в CSV' # type: ignore
 
+class ApplicationFieldInline(admin.TabularInline):
+    model = ApplicationField
+    extra = 1
+
+class ApplicationAnswerInline(admin.TabularInline):
+    model = ApplicationAnswer
+    extra = 1
+
 class ReviewInline(admin.TabularInline):
     model = Review
     extra = 1
-    verbose_name = "Оценка"
-    verbose_name_plural = "Оценки"
 
 class ReviewedFilter(admin.SimpleListFilter):
-    title = 'Статус оценки'
+    title = 'Оценено'
     parameter_name = 'reviewed'
 
-    def lookups(self, request, model_admin): # type: ignore
+    def lookups(self, request, model_admin):
         return (
-            ('yes', 'Оцененные'),
-            ('no', 'Неоцененные'),
+            ('yes', 'Да'),
+            ('no', 'Нет'),
         )
 
     def queryset(self, request, queryset):
         if self.value() == 'yes':
-            return queryset.filter(reviews__isnull=False).distinct()
+            return queryset.filter(reviews__isnull=False)
         if self.value() == 'no':
             return queryset.filter(reviews__isnull=True)
 
+@admin.register(Contest)
+class ContestAdmin(admin.ModelAdmin):
+    list_display = ('title', 'start_date', 'end_date', 'applications_count', 'download_report')
+    search_fields = ('title', 'description')
+    inlines = [ApplicationFieldInline]
+    
+    def applications_count(self, obj):
+        return obj.application_set.count()
+    applications_count.short_description = 'Количество участников'
+    
+    actions = ['export_contests_to_csv']
+    
+    def export_contests_to_csv(self, request, queryset):
+        fields = ['Название', 'Дата начала', 'Дата окончания', 'Количество участников']
+        return export_to_csv(self, request, queryset, fields, 'contests.csv')
+    export_contests_to_csv.short_description = 'Экспортировать в CSV'
+    
+    def download_report(self, obj):
+        return format_html(
+            '<a class="button" href="{}">Скачать отчет</a>',
+            f'/admin/women/contest/{obj.id}/download-report/'
+        )
+    download_report.short_description = 'Отчет'
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                '<int:contest_id>/download-report/',
+                self.admin_site.admin_view(self.download_report_view),
+                name='contest-download-report',
+            ),
+        ]
+        return custom_urls + urls
+    
+    def download_report_view(self, request, contest_id):
+        return generate_contest_report(contest_id)
+
+@admin.register(Application)
 class ApplicationAdmin(admin.ModelAdmin):
-    list_display = ('startup_name', 'user', 'average_score', 'is_reviewed')
-    list_filter = (ReviewedFilter,)
-    inlines = [ReviewInline]
-    actions = [export_applications_to_csv]
-
+    list_display = ('get_username', 'get_full_name', 'contest', 'created_at', 'is_reviewed', 'average_score', 'review_button')
+    list_filter = (ReviewedFilter, 'contest')
+    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'contest__title')
+    ordering = ('-created_at',)
+    inlines = [ApplicationAnswerInline, ReviewInline]
+    
+    def get_username(self, obj):
+        return obj.user.username
+    get_username.short_description = 'Логин'
+    
+    def get_full_name(self, obj):
+        return f"{obj.user.last_name} {obj.user.first_name}"
+    get_full_name.short_description = 'Участник'
+    
     def average_score(self, obj):
-        return obj.reviews.aggregate(Avg('total_score'))['total_score__avg']
-
+        score = obj.reviews.aggregate(Avg('total_score'))['total_score__avg'] or 0
+        return f"{score:.1f}"
+    average_score.short_description = 'Средний балл'
+    
     def is_reviewed(self, obj):
         return obj.reviews.exists()
+    is_reviewed.boolean = True
+    is_reviewed.short_description = 'Оценено'
+    
+    def review_button(self, obj):
+        return format_html('<a href="/admin/women/review/add/?application={}" class="button">Оценить</a>', obj.id)
+    review_button.short_description = 'Действия'
+    review_button.allow_tags = True
+    
+    actions = ['export_applications_to_csv']
+    
+    def export_applications_to_csv(self, request, queryset):
+        fields = ['Логин', 'Участник', 'Конкурс', 'Дата создания', 'Оценено', 'Средний балл']
+        return export_to_csv(self, request, queryset, fields, 'applications.csv')
+    export_applications_to_csv.short_description = 'Экспортировать в CSV'
 
-    average_score.short_description = 'Средний балл' # type: ignore
-    is_reviewed.boolean = True # type: ignore
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.annotate(average_score=Avg('reviews__total_score'))
-
-class UserAdmin(admin.ModelAdmin):
-    actions = [export_users_to_csv]
-
-class ApplicationProxy(Application):
-    class Meta:
-        proxy = True
-        verbose_name = "Рейтинг заявок"
-        verbose_name_plural = "Рейтинг заявок"
-
-class RatingAdmin(admin.ModelAdmin):
-    list_display = ('startup_name', 'average_score')
-    actions = [export_rating_to_csv]
-
-    def startup_name(self, obj):
-        return obj.startup_name
-
+@admin.register(ApplicationProxy)
+class ApplicationProxyAdmin(admin.ModelAdmin):
+    list_display = ('get_username', 'get_full_name', 'contest', 'created_at', 'is_reviewed', 'average_score')
+    list_filter = (ReviewedFilter, 'contest')
+    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'contest__title')
+    
+    def get_username(self, obj):
+        return obj.user.username
+    get_username.short_description = 'Логин'
+    
+    def get_full_name(self, obj):
+        return f"{obj.user.last_name} {obj.user.first_name}"
+    get_full_name.short_description = 'Участник'
+    
     def average_score(self, obj):
-        return obj.average_score
-    average_score.admin_order_field = 'average_score'  # type: ignore # Позволяет сортировать в админке
-
+        score = obj.reviews.aggregate(Avg('total_score'))['total_score__avg'] or 0
+        return f"{score:.1f}"
+    average_score.short_description = 'Средний балл'
+    
+    def is_reviewed(self, obj):
+        return obj.reviews.exists()
+    is_reviewed.boolean = True
+    is_reviewed.short_description = 'Оценено'
+    
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.annotate(average_score=Avg('reviews__total_score')).order_by('-average_score')
+        return qs.annotate(avg_score=Avg('reviews__total_score')).order_by('-avg_score')
+    
+    actions = ['export_rating_to_csv']
+    
+    def export_rating_to_csv(self, request, queryset):
+        fields = ['Логин', 'Участник', 'Конкурс', 'Дата создания', 'Оценено', 'Средний балл']
+        return export_to_csv(self, request, queryset, fields, 'rating.csv')
+    export_rating_to_csv.short_description = 'Экспортировать в CSV'
 
-
-# Регистрация моделей в админ-панели
-admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
-admin.site.register(Application, ApplicationAdmin)
-admin.site.register(Review)
-admin.site.register(ApplicationProxy, RatingAdmin)
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ('application', 'reviewer', 'total_score')
+    list_filter = ('application__contest', 'reviewer')
+    search_fields = ('application__user__username', 'reviewer__username')
+    
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = [
+            ('Оценка', {
+                'fields': ('application', 'reviewer', 'innovation', 'feasibility', 'impact', 'presentation_quality', 'total_score', 'comment'),
+            }),
+        ]
+        
+        # Добавляем информацию о заявке только если есть application_id в URL
+        if 'application' in request.GET:
+            fieldsets.insert(0, ('Информация о заявке', {
+                'fields': ('application_info',),
+                'classes': ('wide',),
+            }))
+                
+        return fieldsets
+    
+    readonly_fields = ('application_info',)
+    
+    def application_info(self, obj=None):
+        try:
+            if 'application' in self.request.GET:
+                application = Application.objects.get(id=self.request.GET['application'])
+                
+                html = f"""
+                <div style="margin: 10px 0; padding: 15px; background-color: #f8f9fa; border-radius: 5px; border: 1px solid #dee2e6;">
+                    <h3 style="color: #6f42c1; margin-bottom: 15px;">Информация о заявке</h3>
+                    <p style="margin: 5px 0;"><strong>Конкурс:</strong> {application.contest.title}</p>
+                    <p style="margin: 5px 0;"><strong>Участник:</strong> {application.user.get_full_name()}</p>
+                    <p style="margin: 5px 0;"><strong>Дата подачи:</strong> {application.created_at.strftime('%d.%m.%Y')}</p>
+                    <h4 style="color: #6f42c1; margin: 15px 0 10px;">Ответы на вопросы:</h4>
+                """
+                
+                answers = application.answers.all()
+                if not answers:
+                    html += "<p>Ответы на вопросы отсутствуют</p>"
+                else:
+                    for answer in answers:
+                        html += f"""
+                        <div style="margin: 8px 0; padding: 8px; background-color: white; border-radius: 4px;">
+                            <strong>{answer.field.label}:</strong> {answer.value}
+                        </div>
+                        """
+                html += "</div>"
+                return format_html(html)
+            return "Информация о заявке будет доступна после выбора заявки"
+        except Exception as e:
+            return format_html(f"Ошибка при отображении информации: {str(e)}")
+    application_info.short_description = 'Информация о заявке'
+    
+    def get_form(self, request, obj=None, **kwargs):
+        self.request = request
+        return super().get_form(request, obj, **kwargs)
+    
+    actions = ['export_reviews_to_csv']
+    
+    def export_reviews_to_csv(self, request, queryset):
+        fields = ['Заявка', 'Эксперт', 'Общий балл']
+        return export_to_csv(self, request, queryset, fields, 'reviews.csv')
+    export_reviews_to_csv.short_description = 'Экспортировать в CSV'

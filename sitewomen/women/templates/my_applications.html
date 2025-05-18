@@ -8,14 +8,40 @@
     <link type="text/css" href="{% static 'css/style.css' %}" rel="stylesheet"/>
 </head>
 <body>
+  <style>
+    .contest {
+        border: 1px solid #ccc;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+    }
+    .contest h2 {
+        margin-top: 0;
+    }
+    .contest p {
+        margin: 5px 0;
+    }
+    .contest a {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 5px 10px;
+        background-color: #007BFF;
+        color: white;
+        text-decoration: none;
+        border-radius: 3px;
+    }
+    .contest a:hover {
+        background-color: #0056b3;
+    }
+</style>
+
 <div id="header" class="header">
     <img src="{% static 'images/logo.png' %}" alt="logo">
     <div class="create-line"></div>
     <div class="menu" id="menu">
         <a href="{% url 'home' %}" class="menu-button">Главная</a>
         {% if user.is_authenticated %}
-            <a href="{% url 'form' %}" class="menu-button">Конкурс</a>
-            <a href="{% url 'my_applications' %}" class="menu-button">Мои заявки</a>
+            <a href="{% url 'my_applications' %}" class="menu-button">Конкурсы</a>
         {% endif %}
     </div>
 
@@ -40,22 +66,21 @@
 
 <div class="white-rectangle">
   <div class="content">
-    <h2 class="heading">Мои заявки</h2>
-    <a href="{% url 'form' %}" class="button">Добавить заявку</a>
-    <ul>
-      {% for application in applications %}
-        <li>
-          <h3>{{ application.startup_name }}</h3>
-          <p>Номинация: {{ application.nomination }}</p>
-          <a href="{% url 'application_detail' application.id %}" class="button">Подробнее</a>
-        </li>
-      {% empty %}
-        <li>У вас пока нет заявок.</li>
-      {% endfor %}
-    </ul>
-  </div>
-  <a href="{% url 'download_certificate' %}" class="button">Скачать сертификат</a>
-  <a href="{% url 'download_diploma' %}" class="button">Скачать диплом</a>
+    <h2 class="heading">Конкурсы</h2>
+    {% for contest in contests %}
+    <div class="contest">
+        <h2>{{ contest.contest.title }}</h2>
+        <p><strong>Описание:</strong> {{ contest.contest.description }}</p>
+        <p><strong>Положение конкурса:</strong> <a href="{{ contest.contest.regulations.url }}">Скачать</a></p>
+        <p><strong>Начало конкурса:</strong> {{ contest.contest.start_date }}</p>
+        <p><strong>Окончание конкурса:</strong> {{ contest.contest.end_date }}</p>
+          {% if contest.application %}
+            <a href="{% url 'view_application' contest.application.id %}">Посмотреть заявку</a>
+          {% else %}
+          <a href="{% url 'contest_application' contest.contest.id %}">Добавить заявку</a>
+          {% endif %}
+    </div>
+  {% endfor %}
 </div>
 
 

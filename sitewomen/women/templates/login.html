@@ -1,23 +1,79 @@
+{% extends 'women/base.html' %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Вход</title>
-    <link type="text/css" href="{% static 'css/style.css' %}" rel="stylesheet"/>
-</head>
-<body>
-<div class="auth-container">
-    <div class="auth-box">
-        <h1 class="auth-title">Вход</h1>
-        <form method="post" action="{% url 'login' %}">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="auth-button">Войти</button>
-        </form>
-        <p class="switch-form">Нет аккаунта? <a href="{% url 'register' %}">Регистрация</a></p>
+{% block content %}
+<div class="white-rectangle">
+    <div class="content">
+        <h2 class="heading">Вход</h2>
+        <div class="contest">
+            <form method="post" action="{% url 'login' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="id_username">Имя пользователя:</label>
+                    {{ form.username }}
+                    {% for error in form.username.errors %}
+                        <span class="error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label for="id_password">Пароль:</label>
+                    {{ form.password }}
+                    {% for error in form.password.errors %}
+                        <span class="error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="button">Войти</button>
+            </form>
+            <p class="switch-form">Нет аккаунта? <a href="{% url 'register' %}" class="link">Регистрация</a></p>
+        </div>
     </div>
 </div>
-</body>
-</html>
+
+<style>
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #6f42c1;
+    font-weight: bold;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #6f42c1;
+    box-shadow: 0 0 0 2px rgba(111, 66, 193, 0.25);
+}
+
+.error {
+    color: #dc3545;
+    font-size: 14px;
+    margin-top: 5px;
+    display: block;
+}
+
+.switch-form {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.link {
+    color: #6f42c1;
+    text-decoration: none;
+}
+
+.link:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %}

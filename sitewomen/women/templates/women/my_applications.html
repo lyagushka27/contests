@@ -1,0 +1,66 @@
+{% extends 'women/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="white-rectangle">
+    <div class="content">
+        <h2 class="heading">Конкурсы</h2>
+        {% for item in contests %}
+        <div class="contest">
+            <h2>{{ item.contest.title }}</h2>
+            <p><strong>Описание:</strong> {{ item.contest.description }}</p>
+            <p><strong>Положение конкурса:</strong> <a href="{{ item.contest.regulations.url }}" class="button">Скачать</a></p>
+            <p><strong>Начало конкурса:</strong> {{ item.contest.start_date }}</p>
+            <p><strong>Окончание конкурса:</strong> {{ item.contest.end_date }}</p>
+            
+            {% if item.has_application %}
+                <div class="contest-actions">
+                    <a href="{% url 'view_application' item.contest.id %}" class="button">Посмотреть заявку</a>
+                    {% if item.contest.end_date < now %}
+                        <div class="certificate-actions">
+                            <a href="{% url 'download_certificate' item.contest.id %}" class="button button-certificate">
+                                <i class="fas fa-certificate"></i> Скачать сертификат
+                            </a>
+                            <a href="{% url 'download_diploma' item.contest.id %}" class="button button-diploma">
+                                <i class="fas fa-award"></i> Скачать диплом
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <a href="{% url 'contest_application' item.contest.id %}" class="button">Добавить заявку</a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .contest-actions {
+        margin-top: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .certificate-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    
+    .button-certificate {
+        background-color: #4CAF50;
+        color: white;
+    }
+    
+    .button-diploma {
+        background-color: #2196F3;
+        color: white;
+    }
+    
+    .button-certificate:hover, .button-diploma:hover {
+        opacity: 0.9;
+    }
+</style>
+{% endblock %} 

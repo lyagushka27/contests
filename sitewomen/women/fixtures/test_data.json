@@ -1,0 +1,123 @@
+[
+    {
+        "model": "auth.user",
+        "pk": 1,
+        "fields": {
+            "username": "admin",
+            "password": "pbkdf2_sha256$600000$HASHED_PASSWORD",
+            "is_superuser": true,
+            "is_staff": true,
+            "first_name": "Администратор",
+            "last_name": "Системы"
+        }
+    },
+    {
+        "model": "auth.user",
+        "pk": 2,
+        "fields": {
+            "username": "user1",
+            "password": "pbkdf2_sha256$600000$HASHED_PASSWORD",
+            "first_name": "Анна",
+            "last_name": "Иванова"
+        }
+    },
+    {
+        "model": "auth.user",
+        "pk": 3,
+        "fields": {
+            "username": "user2",
+            "password": "pbkdf2_sha000$HASHED_PASSWORD",
+            "first_name": "Мария",
+            "last_name": "Петрова"
+        }
+    },
+    {
+        "model": "auth.user",
+        "pk": 4,
+        "fields": {
+            "username": "user3",
+            "password": "pbkdf2_sha256$600000$HASHED_PASSWORD",
+            "first_name": "Елена",
+            "last_name": "Сидорова"
+        }
+    },
+    {
+        "model": "women.contest",
+        "pk": 1,
+        "fields": {
+            "title": "Конкурс инновационных проектов",
+            "description": "Конкурс для женщин-предпринимателей",
+            "start_date": "2024-01-01",
+            "end_date": "2024-12-31"
+        }
+    },
+    {
+        "model": "women.application",
+        "pk": 1,
+        "fields": {
+            "user": 2,
+            "contest": 1,
+            "created_at": "2024-01-15T10:00:00Z"
+        }
+    },
+    {
+        "model": "women.application",
+        "pk": 2,
+        "fields": {
+            "user": 3,
+            "contest": 1,
+            "created_at": "2024-02-01T11:00:00Z"
+        }
+    },
+    {
+        "model": "women.application",
+        "pk": 3,
+        "fields": {
+            "user": 4,
+            "contest": 1,
+            "created_at": "2024-02-15T12:00:00Z"
+        }
+    },
+    {
+        "model": "women.review",
+        "pk": 1,
+        "fields": {
+            "application": 1,
+            "reviewer": 1,
+            "innovation": 8,
+            "feasibility": 7,
+            "impact": 9,
+            "presentation_quality": 8,
+            "total_score": 32,
+            "comment": "Отличный проект с высоким потенциалом"
+        }
+    },
+    {
+        "model": "women.review",
+        "pk": 2,
+        "fields": {
+            "application": 2,
+            "reviewer": 1,
+            "innovation": 9,
+            "feasibility": 8,
+            "impact": 7,
+            "presentation_quality": 9,
+            "total_score": 33,
+            "comment": "Инновационный подход к решению проблемы"
+        }
+    },
+    {
+        "model": "women.review",
+        "pk": 3,
+        "fields": {
+            "application": 3,
+            "reviewer": 1,
+            "innovation": 7,
+            "feasibility": 9,
+            "impact": 8,
+            "presentation_quality": 7,
+            "total_score": 31,
+            "comment": "Хорошая проработка технической части"
+        }
+    }
+] 

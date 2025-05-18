@@ -2,7 +2,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
 from django import forms
-from .models import Application, UserProfile
+from .models import Application, Contest, UserProfile, Review
+from .models import ApplicationField, ApplicationAnswer, Application
 
 
 class LoginForm(AuthenticationForm):
@@ -15,62 +16,52 @@ class LoginForm(AuthenticationForm):
         }
 
 
-class ApplicationForm(forms.ModelForm):
-    NOMINATION_CHOICES = [
-        ('informatics', 'Информатика'),
-        ('mathematics', 'Математика'),
-        ('history', 'История'),
-        ('economics', 'Экономика'),
-        # Добавьте другие номинации по необходимости
-    ]
+class ApplicationForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        contest = kwargs.pop('contest', None)
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
 
-    nomination = forms.ChoiceField(choices=NOMINATION_CHOICES, label='Номинация', widget=forms.Select(attrs={'class': 'input-v'}))
+        if contest:
+            fields = contest.fields.order_by('order')
+            for field in fields:
+                field_name = f'field_{field.id}'
+                initial = None
 
-    class Meta:
-        model = Application
-        fields = [
-            'first_name', 'last_name', 'middle_name', 'phone', 'email',
-            'organization', 'age', 'class_number', 'nomination',
-            'startup_name', 'startup_description', 'presentation', 'cover'
-        ]
-        labels = {
-            'first_name': 'Имя',
-            'last_name': 'Фамилия',
-            'middle_name': 'Отчество',
-            'phone': 'Номер телефона',
-            'email': 'Email',
-            'organization': 'Название образовательной организации',
-            'age': 'Возраст',
-            'class_number': 'Номер класса',
-            'startup_name': 'Название стартапа',
-            'startup_description': 'Описание стартапа',
-            'presentation': 'Презентация (PDF)',
-            'cover': 'Обложка (JPG)',
-        }
-        widgets = {
-            'first_name': forms.TextInput(attrs={'class': 'input-v', 'placeholder': 'Софья'}),
-            'last_name': forms.TextInput(attrs={'class': 'input-v', 'placeholder': 'Гиенко'}),
-            'middle_name': forms.TextInput(attrs={'class': 'input-v', 'placeholder': 'Константинова'}),
-            'phone': forms.TextInput(attrs={'class': 'input-v', 'placeholder': '+7 999 999 99 99'}),
-            'email': forms.EmailInput(attrs={'class': 'input-v', 'placeholder': 'turkish.sweetshop@gmail.com'}),
-            'organization': forms.TextInput(attrs={'class': 'input-v', 'placeholder': 'АлГПУ'}),
-            'age': forms.TextInput(attrs={'class': 'input-v', 'placeholder': '17'}),
-            'class_number': forms.TextInput(attrs={'class': 'input-v', 'placeholder': '11'}),
-            'startup_name': forms.TextInput(attrs={'class': 'input-v', 'placeholder': 'TechWave'}),
-            'startup_description': forms.Textarea(attrs={'class': 'input-v', 'rows': 4, 'placeholder': 'TechWave - это инновационный стартап...'}),
-            'presentation': forms.FileInput(attrs={'class': 'file-upload'}),
-            'cover': forms.FileInput(attrs={'class': 'file-upload'}),
+                # Загружаем старые ответы, если редактирование
+                if user:
+                    try:
+                        app = Application.objects.get(user=user, contest=contest)
+                        answer = app.answers.filter(field=field).first()
+                        if answer:
+                            initial = answer.value
+                    except Application.DoesNotExist:
+                        pass
+
+                self.fields[field_name] = self.create_form_field(field, initial)
+
+    def create_form_field(self, field, initial=None):
+        field_kwargs = {
+            'label': field.label,
+            'required': field.required,
+            'initial': initial
         }
 
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            if 'initial' not in kwargs:
-                kwargs['initial'] = {}
-            kwargs['initial'].update({
-                'first_name': self.instance.user.userprofile.first_name, # type: ignore
-                'last_name': self.instance.user.userprofile.last_name, # type: ignore
-                'middle_name': self.instance.user.userprofile.middle_name, # type: ignore
-            })
+        if field.field_type == 'text':
+            return forms.CharField(**field_kwargs)
+        elif field.field_type == 'email':
+            return forms.EmailField(**field_kwargs)
+        elif field.field_type == 'number':
+            return forms.IntegerField(**field_kwargs)
+        elif field.field_type == 'file':
+            return forms.FileField(**field_kwargs)
+        elif field.field_type == 'image':
+            return forms.ImageField(**field_kwargs)
+        elif field.field_type == 'choice':
+            choices = [(choice.value, choice.value) for choice in field.choices.all()]
+            return forms.ChoiceField(choices=choices, **field_kwargs)
+
+        return forms.CharField(**field_kwargs)  # fallback
 
 class RegisterForm(UserCreationForm):
     first_name = forms.CharField(max_length=100, required=True)
@@ -91,3 +82,32 @@ class RegisterForm(UserCreationForm):
             middle_name=self.cleaned_data['middle_name']
         )
         return user
+
+class ContestForm(forms.ModelForm):
+    class Meta:
+        model = Contest
+        fields = ['title', 'description', 'regulations', 'start_date', 'end_date']
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ['innovation', 'feasibility', 'impact', 'presentation_quality', 'comment']
+        widgets = {
+            'innovation': forms.NumberInput(attrs={'min': 0, 'max': 20}),
+            'feasibility': forms.NumberInput(attrs={'min': 0, 'max': 20}),
+            'impact': forms.NumberInput(attrs={'min': 0, 'max': 20}),
+            'presentation_quality': forms.NumberInput(attrs={'min': 0, 'max': 20}),
+            'comment': forms.Textarea(attrs={'rows': 4}),
+        }
+
+    def save(self, commit=True):
+        review = super().save(commit=False)
+        review.total_score = (
+            review.innovation + 
+            review.feasibility + 
+            review.impact + 
+            review.presentation_quality
+        )
+        if commit:
+            review.save()
+        return review

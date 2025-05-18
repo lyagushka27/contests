@@ -1,72 +1,115 @@
+{% extends 'women/base.html' %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Регистрация</title>
-    <link type="text/css" href="{% static 'css/style.css' %}" rel="stylesheet"/>
-</head>
-<body>
-<div class="auth-container">
-    <div class="auth-box">
-        <h1 class="auth-title">Регистрация</h1>
-        <form method="post">
-            {% csrf_token %}
-            <div>
-                <label for="id_username">Имя пользователя:</label>
-                {{ form.username }}
-                {% for error in form.username.errors %}
-                    <span class="error">{{ error }}</span>
-                {% endfor %}
-            </div>
-            <div>
-                <label for="id_first_name">Имя:</label>
-                {{ form.first_name }}
-                {% for error in form.first_name.errors %}
-                    <span class="error">{{ error }}</span>
-                {% endfor %}
-            </div>
-            <div>
-                <label for="id_last_name">Фамилия:</label>
-                {{ form.last_name }}
-                {% for error in form.last_name.errors %}
-                    <span class="error">{{ error }}</span>
-                {% endfor %}
-            </div>
-            <div>
-                <label for="id_middle_name">Отчество:</label>
-                {{ form.middle_name }}
-                {% for error in form.middle_name.errors %}
-                    <span class="error">{{ error }}</span>
-                {% endfor %}
-            </div>
-            <div>
-                <label for="id_email">Email:</label>
-                {{ form.email }}
-                {% for error in form.email.errors %}
-                    <span class="error">{{ error }}</span>
-                {% endfor %}
-            </div>
-            <div>
-                <label for="id_password1">Пароль:</label>
-                {{ form.password1 }}
-                {% for error in form.password1.errors %}
-                    <span class="error">{{ error }}</span>
-                {% endfor %}
-            </div>
-            <div>
-                <label for="id_password2">Подтверждение пароля:</label>
-                {{ form.password2 }}
-                {% for error in form.password2.errors %}
-                    <span class="error">{{ error }}</span>
-                {% endfor %}
-            </div>
-            <button type="submit" class="auth-button">Зарегистрироваться</button>
-        </form>
-        
-        <p class="switch-form">Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a></p>
+{% block content %}
+<div class="white-rectangle">
+    <div class="content">
+        <h2 class="heading">Регистрация</h2>
+        <div class="contest">
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="id_username">Имя пользователя:</label>
+                    {{ form.username }}
+                    {% for error in form.username.errors %}
+                        <span class="error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label for="id_first_name">Имя:</label>
+                    {{ form.first_name }}
+                    {% for error in form.first_name.errors %}
+                        <span class="error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label for="id_last_name">Фамилия:</label>
+                    {{ form.last_name }}
+                    {% for error in form.last_name.errors %}
+                        <span class="error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label for="id_middle_name">Отчество:</label>
+                    {{ form.middle_name }}
+                    {% for error in form.middle_name.errors %}
+                        <span class="error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label for="id_email">Email:</label>
+                    {{ form.email }}
+                    {% for error in form.email.errors %}
+                        <span class="error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label for="id_password1">Пароль:</label>
+                    {{ form.password1 }}
+                    {% for error in form.password1.errors %}
+                        <span class="error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label for="id_password2">Подтверждение пароля:</label>
+                    {{ form.password2 }}
+                    {% for error in form.password2.errors %}
+                        <span class="error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="button">Зарегистрироваться</button>
+            </form>
+            
+            <p class="switch-form">Уже есть аккаунт? <a href="{% url 'login' %}" class="link">Войти</a></p>
+        </div>
     </div>
 </div>
-</body>
-</html>
+
+<style>
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #6f42c1;
+    font-weight: bold;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #6f42c1;
+    box-shadow: 0 0 0 2px rgba(111, 66, 193, 0.25);
+}
+
+.error {
+    color: #dc3545;
+    font-size: 14px;
+    margin-top: 5px;
+    display: block;
+}
+
+.switch-form {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.link {
+    color: #6f42c1;
+    text-decoration: none;
+}
+
+.link:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %}

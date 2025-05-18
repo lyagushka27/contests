@@ -1,0 +1,157 @@
+{% extends 'women/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="white-rectangle">
+    <div class="content">
+        <h2 class="heading">Детали заявки</h2>
+        
+        <div class="contest">
+            <h3>Информация о заявке</h3>
+            <p><strong>Конкурс:</strong> {{ application.contest.title }}</p>
+            <p><strong>Дата подачи:</strong> {{ application.created_at|date:"d.m.Y" }}</p>
+            
+            <h3>Ответы на вопросы</h3>
+            {% if answers %}
+                {% for answer in answers %}
+                    <div class="field">
+                        <p><strong>{{ answer.field.label }}:</strong> {{ answer.value }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>Ответы на вопросы отсутствуют</p>
+            {% endif %}
+        </div>
+
+        <div class="contest">
+            <h3>Оценки жюри</h3>
+            {% if application.reviews.all %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Эксперт</th>
+                                <th>Инновационность</th>
+                                <th>Реализуемость</th>
+                                <th>Влияние</th>
+                                <th>Качество презентации</th>
+                                <th>Общий балл</th>
+                                <th>Комментарий</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for review in application.reviews.all %}
+                                <tr>
+                                    <td>{{ review.reviewer.get_full_name }}</td>
+                                    <td>{{ review.innovation }}</td>
+                                    <td>{{ review.feasibility }}</td>
+                                    <td>{{ review.impact }}</td>
+                                    <td>{{ review.presentation_quality }}</td>
+                                    <td>{{ review.total_score }}</td>
+                                    <td>{{ review.comment }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>Оценки жюри пока отсутствуют</p>
+            {% endif %}
+        </div>
+
+        <div class="form-actions">
+            <a href="{% url 'contest_detail' application.contest.id %}" class="button">Вернуться к конкурсу</a>
+            <a href="{% url 'contest_list' %}" class="button">Вернуться к списку конкурсов</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.white-rectangle {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 1200px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.heading {
+    color: #6f42c1;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.contest {
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.contest h3 {
+    color: #6f42c1;
+    margin-bottom: 15px;
+}
+
+.field {
+    margin-bottom: 15px;
+}
+
+.field strong {
+    color: #6f42c1;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.button {
+    display: inline-block;
+    background-color: #6f42c1;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.button:hover {
+    background-color: #5a32a3;
+    transform: translateY(-2px);
+    color: white;
+    text-decoration: none;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.table th {
+    background-color: #6f42c1;
+    color: white;
+    padding: 10px;
+    text-align: left;
+}
+
+.table td {
+    padding: 10px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+</style>
+{% endblock %} 

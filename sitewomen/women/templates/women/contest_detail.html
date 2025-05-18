@@ -1,0 +1,38 @@
+{% extends 'women/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="white-rectangle">
+    <div class="content">
+        <h2 class="heading">{{ contest.title }}</h2>
+        
+        <div class="contest-details">
+            <p><strong>Описание:</strong> {{ contest.description }}</p>
+            <p><strong>Начало конкурса:</strong> {{ contest.start_date }}</p>
+            <p><strong>Окончание конкурса:</strong> {{ contest.end_date }}</p>
+            <p><strong>Положение конкурса:</strong> <a href="{{ contest.regulations.url }}" class="button">Скачать</a></p>
+        </div>
+
+        {% if user.is_authenticated %}
+            {% if application %}
+                <div class="application-status">
+                    <h3>Ваша заявка</h3>
+                    <p>Вы уже подали заявку на этот конкурс.</p>
+                    <a href="{% url 'view_application' contest.id %}" class="button">Просмотреть заявку</a>
+                </div>
+            {% else %}
+                <div class="application-form">
+                    <h3>Подать заявку</h3>
+                    <a href="{% url 'contest_application' contest.id %}" class="button">Подать заявку</a>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="auth-required">
+                <p>Для подачи заявки необходимо <a href="{% url 'login' %}">войти</a> или <a href="{% url 'register' %}">зарегистрироваться</a>.</p>
+            </div>
+        {% endif %}
+
+        <a href="{% url 'contest_list' %}" class="button">Вернуться к списку конкурсов</a>
+    </div>
+</div>
+{% endblock %} 
